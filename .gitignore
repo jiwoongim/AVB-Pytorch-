@@ -1,3 +1,13 @@
+
+*.pyc
+*.swp
+*.swo
+*.png
+*.jpg
+*.pdf
+*.pkl
+*.pkg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
