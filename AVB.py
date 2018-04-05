@@ -103,8 +103,6 @@ class Discriminator(nn.Module):
 
         Y0 = self.forward(x_, z_x_)
         Y1 = self.forward(x_, z_)
-        #Y0 = Y0.clamp(0.0001, 0.9999)
-        #Y1 = Y1.clamp(0.0001, 0.9999)
         #J  = -torch.mean(torch.log(Y0) + torch.log(1 - Y1))
         y_real_ = Variable(torch.ones(self.batch_size, 1).cuda())
         y_fake_ = Variable(torch.zeros(self.batch_size, 1).cuda())
@@ -200,10 +198,11 @@ class Encoder(nn.Module):
     def sample(self, mu, logvar):
 
         std = torch.exp(logvar)
-        if self.gpu_mode :
-            eps = torch.cuda.FloatTensor(std.size()).normal_()
+        if self.gpu_mode: 
+            eps = torch.randn(x.size()).cuda() * 0.05
         else:
-            eps = torch.FloatTensor(std.size()).normal_()
+            eps = torch.randn(x.size()) * 0.05
+
         eps = Variable(eps)
 
         return eps.mul(std).add_(mu)
@@ -310,10 +309,10 @@ class AVB():
     def forward(self, x):
 
         if self.model_name == 'DAVB':
-            if self.gpu_mode:
-                eps = torch.cuda.FloatTensor(x.size()).normal_(std=0.05)
+            if self.gpu_mode: 
+                eps = torch.randn(x.size()).cuda() * 0.05
             else:
-                eps = torch.FloatTensor(x.size()).normal_(std=0.05)
+                eps = torch.randn(x.size()) * 0.05
             x = x.add_(Variable(eps))
         
         z   = self.encoder(x)

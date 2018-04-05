@@ -52,16 +52,16 @@ def train(model, args, data_loader):
 
                 #if epoch < 150 or (epoch >= 150 and epoch %2 == 0):
                 #if np.random.randint(2, size=1)[0]:
-                for i in range(20):
+                for i in range(10):
                     z_x_= model.encoder(x_)
                     z_x_= torch.autograd.Variable(z_x_.data, requires_grad=False)
 
                     # update Discriminator network 
-                    lrDisc = max([args.lrDisc / (1.0 + epoch / 100.0), 0.000001])
+                    lrDisc = max([args.lrDisc / (1.0 + epoch / 50.0), 0.000001])
                     disc_optimizer.zero_grad()
                     lossD = model.disc_net.loss(x_, z_x_, z_)
                     lossD.backward()
-                    #for g in disc_optimizer.param_groups: g['lr'] = lrDisc
+                    for g in disc_optimizer.param_groups: g['lr'] = lrDisc
                     disc_optimizer.step() 
 
 
@@ -70,13 +70,12 @@ def train(model, args, data_loader):
                 dec_optimizer.zero_grad()
                 lrEnc = max([args.lrEnc / (1.0 + epoch / 100.0), 0.000001])
                 lrDec = max([args.lrDec / (1.0 + epoch / 100.0), 0.000001])
-                for g in enc_optimizer.param_groups: g['lr'] = lrEnc
-                for g in dec_optimizer.param_groups: g['lr'] = lrDec
+                #for g in enc_optimizer.param_groups: g['lr'] = lrEnc
+                #for g in dec_optimizer.param_groups: g['lr'] = lrDec
                 beta = min([float(epoch) / args.anneal_steps, 1.0])
                 loss = model.loss(x_, beta)
                 loss.backward()
                 train_hist['tr_loss'].append(loss.data[0])
-
 
 
                 if np.isnan(loss.data.cpu().numpy()):
@@ -89,7 +88,7 @@ def train(model, args, data_loader):
                 dec_optimizer.step()
 
                 if ((iter + 1) % 100) == 0:
-                    print("Epoch: [%2d] [%4d/%4d] Beta %.2f, lossIW: %.8f | lrD %.5f, lossD: %.8f" %
+                    print("Epoch: [%2d] [%4d/%4d] Beta %.2f, lossV: %.8f | lrD %.5f, lossD: %.8f" %
                             ((epoch + 1), \
                             (iter + 1), \
                             len(data_loader.dataset) // args.batch_size, \
@@ -202,7 +201,7 @@ def parse_args():
     parser.add_argument('--lrDisc', type=float, default=1e-4)
     parser.add_argument('--lrDec', type=float, default=1e-4)
     parser.add_argument('--lrEnc', type=float, default=1e-4)
-    parser.add_argument('--anneal_steps', type=float, default=25)
+    parser.add_argument('--anneal_steps', type=float, default=1)
     parser.add_argument('--beta1', type=float, default=0.9)
     parser.add_argument('--beta2', type=float, default=0.999)
     parser.add_argument('--clip', type=float, default=5.0)
