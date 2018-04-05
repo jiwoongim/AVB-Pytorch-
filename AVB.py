@@ -275,6 +275,7 @@ class AVB():
 
     def __init__(self, args):
         super(AVB, self).__init__()
+
         # parameters
         self.epoch = args.epoch
         self.batch_size = args.batch_size
