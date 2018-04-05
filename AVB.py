@@ -198,10 +198,11 @@ class Encoder(nn.Module):
     def sample(self, mu, logvar):
 
         std = torch.exp(logvar)
-        if self.gpu_mode :
-            eps = torch.cuda.FloatTensor(std.size()).normal_()
+        if self.gpu_mode: 
+            eps = torch.randn(x.size()).cuda() * 0.05
         else:
-            eps = torch.FloatTensor(std.size()).normal_()
+            eps = torch.randn(x.size()) * 0.05
+
         eps = Variable(eps)
 
         return eps.mul(std).add_(mu)

@@ -52,7 +52,7 @@ def train(model, args, data_loader):
 
                 #if epoch < 150 or (epoch >= 150 and epoch %2 == 0):
                 #if np.random.randint(2, size=1)[0]:
-                for i in range(1):
+                for i in range(10):
                     z_x_= model.encoder(x_)
                     z_x_= torch.autograd.Variable(z_x_.data, requires_grad=False)
 
