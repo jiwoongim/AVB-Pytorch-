@@ -341,7 +341,7 @@ class AVB():
         #logr = - 0.5 * torch.sum(z**2 + logstd*2 + PI2[0], dim=-1) 
         KL = torch.squeeze(Td) #+ logr - logz
         J  = torch.mean(bce - beta * KL, dim=0)
-        return -J
+        return -J / (iw * ih * C)
 
 
 

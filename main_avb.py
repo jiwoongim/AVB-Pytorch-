@@ -73,7 +73,7 @@ def train(model, args, data_loader):
                 #for g in enc_optimizer.param_groups: g['lr'] = lrEnc
                 #for g in dec_optimizer.param_groups: g['lr'] = lrDec
                 beta = min([float(epoch) / args.anneal_steps, 1.0])
-                loss = model.loss(x_, beta)
+                loss = model.loss(x_, beta) 
                 loss.backward()
                 train_hist['tr_loss'].append(loss.data[0])
 
@@ -92,7 +92,7 @@ def train(model, args, data_loader):
                             ((epoch + 1), \
                             (iter + 1), \
                             len(data_loader.dataset) // args.batch_size, \
-                            beta, loss.data[0], lrDisc, lossD.data[0]))
+                            beta, loss.data[0] *784, lrDisc, lossD.data[0]))
 
         train_hist['per_epoch_time'].append(time.time() - epoch_start_time)
         visualize_results(model, epoch+1, args)
