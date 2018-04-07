@@ -186,9 +186,9 @@ class Encoder(nn.Module):
             x = self.enc_layer1(x)
 
         if self.gpu_mode :
-            eps = torch.cuda.FloatTensor(x.size()).normal_()
+            eps = torch.randn(x.size()).cuda() 
         else:
-            eps = torch.FloatTensor(x.size()).normal_()
+            eps = torch.randn(x.size())
         eps = Variable(eps, requires_grad=False) 
         h = self.fc(F.tanh(x + self.enc_nlayer1(eps)))
 
