@@ -52,7 +52,7 @@ def train(model, args, data_loader):
 
                 #if epoch < 150 or (epoch >= 150 and epoch %2 == 0):
                 #if np.random.randint(2, size=1)[0]:
-                for i in range(10):
+                for i in range(1):
                     z_x_= model.encoder(x_)
                     z_x_= torch.autograd.Variable(z_x_.data, requires_grad=False)
 
@@ -61,7 +61,7 @@ def train(model, args, data_loader):
                     disc_optimizer.zero_grad()
                     lossD = model.disc_net.loss(x_, z_x_, z_)
                     lossD.backward()
-                    for g in disc_optimizer.param_groups: g['lr'] = lrDisc
+                    #for g in disc_optimizer.param_groups: g['lr'] = lrDisc
                     disc_optimizer.step() 
 
 
@@ -187,7 +187,7 @@ def parse_args():
                         help='The Architecture Type')#, required=True)
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist'],
                         help='The name of dataset')
-    parser.add_argument('--epoch', type=int, default=500, help='The number of epochs to run')
+    parser.add_argument('--epoch', type=int, default=1000, help='The number of epochs to run')
     parser.add_argument('--batch_size', type=int, default=100, help='The size of batch')
     parser.add_argument('--save_dir', type=str, default='models',
                         help='Directory name to save the model')
@@ -196,11 +196,11 @@ def parse_args():
     parser.add_argument('--log_dir', type=str, default='logs',
                         help='Directory name to save training logs')
     parser.add_argument('--acF', type=bool, default=False)
-    parser.add_argument('--z_dim', type=float, default=128)
+    parser.add_argument('--z_dim', type=float, default=32)
     parser.add_argument('--dim_sam', type=float, default=10)
     parser.add_argument('--lrDisc', type=float, default=1e-4)
-    parser.add_argument('--lrDec', type=float, default=1e-4)
-    parser.add_argument('--lrEnc', type=float, default=1e-4)
+    parser.add_argument('--lrDec', type=float, default=1e-5)
+    parser.add_argument('--lrEnc', type=float, default=1e-5)
     parser.add_argument('--anneal_steps', type=float, default=1)
     parser.add_argument('--beta1', type=float, default=0.9)
     parser.add_argument('--beta2', type=float, default=0.999)

@@ -146,21 +146,27 @@ class Encoder(nn.Module):
                 nn.Linear(self.input_height*self.input_width\
                                 *self.input_dim, self.z_dim*4),
                 nn.BatchNorm1d(self.z_dim*4),
-                nn.LeakyReLU(0.2),
+                nn.LeakyReLU(0.2))
+            self.enc_nlayer1 = nn.Sequential(
+                nn.Linear(self.z_dim*4, self.z_dim*4),
+            )
+
+            self.enc_layer2 = nn.Sequential(
                 nn.Linear(self.z_dim*4, self.z_dim*4),
                 nn.BatchNorm1d(self.z_dim*4),
-                nn.LeakyReLU(0.2),
+                nn.LeakyReLU(0.2))
+            self.enc_nlayer2 = nn.Sequential(
+                nn.Linear(self.z_dim*4, self.z_dim*4),
+            )
+
+            self.enc_layer3 = nn.Sequential( 
                 nn.Linear(self.z_dim*4, self.z_dim*4),
                 nn.BatchNorm1d(self.z_dim*4),
-                nn.LeakyReLU(0.2),
+                nn.LeakyReLU(0.2)
             )
 
             self.fc = nn.Sequential(
                 nn.Linear(self.z_dim*4, self.z_dim),
-            )
-
-            self.enc_nlayer1 = nn.Sequential(
-                nn.Linear(self.z_dim*4, self.z_dim*4),
             )
 
         if self.acF: 
@@ -181,16 +187,24 @@ class Encoder(nn.Module):
             x = self.enc_layer1(x)
             x = x.view(-1, 128 * (self.input_height // 4) * (self.input_width // 4))
         else:
-
             x = x.view([-1, self.input_height * self.input_width * self.input_dim])
-            x = self.enc_layer1(x)
 
-        if self.gpu_mode :
-            eps = torch.randn(x.size()).cuda() 
-        else:
-            eps = torch.randn(x.size())
-        eps = Variable(eps, requires_grad=False) 
-        h = self.fc(F.tanh(x + self.enc_nlayer1(eps)))
+            x = self.enc_layer1(x)
+            if self.gpu_mode :
+                eps = torch.randn(x.size()).cuda() 
+            else:
+                eps = torch.randn(x.size())
+            eps = Variable(eps, requires_grad=False) 
+            x = x + self.enc_nlayer1(eps)
+
+            if self.gpu_mode :
+                eps = torch.randn(x.size()).cuda() 
+            else:
+                eps = torch.randn(x.size())
+            eps = Variable(eps, requires_grad=False) 
+            x = x + self.enc_nlayer2(eps)
+            x = self.enc_layer3(x)
+        h = self.fc(x)
 
         return h
 
