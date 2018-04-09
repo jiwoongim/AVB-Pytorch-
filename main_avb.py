@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 import utils 
 from AVB import AVB
 
-def train(model, args, data_loader):
+def train(model, args, data_loader_tr, data_loader_vl):
 
 
     print('---------- Networks architecture -------------')
@@ -24,7 +24,7 @@ def train(model, args, data_loader):
 
 
     train_hist = {}
-    train_hist['tr_loss'] = []
+    train_hist['tr_loss'], train_hist['vl_loss'] = [], []
     train_hist['per_epoch_time'] = []
     train_hist['total_time'] = []
 
@@ -36,9 +36,9 @@ def train(model, args, data_loader):
     for epoch in range(args.epoch):
 
         epoch_start_time = time.time()
-        for iter, (x_, y_) in enumerate(data_loader):
+        for iter, (x_, y_) in enumerate(data_loader_tr):
             if iter * args.batch_size < 50000:
-                if iter == data_loader.dataset.__len__() // args.batch_size:
+                if iter == data_loader_tr.dataset.__len__() // args.batch_size:
                     break
                 
                 N, C, IW, IH = x_.size()
@@ -87,12 +87,31 @@ def train(model, args, data_loader):
                 enc_optimizer.step()
                 dec_optimizer.step()
 
-                if ((iter + 1) % 100) == 0:
-                    print("Epoch: [%2d] [%4d/%4d] Beta %.2f, lossV: %.8f | lrD %.5f, lossD: %.8f" %
+
+        vl_elbo_list = []
+        for iter, (x_, y_) in enumerate(data_loader_vl):
+            if iter * args.batch_size <= 10000:
+                if iter == data_loader_vl.dataset.__len__() // args.batch_size:
+                    break
+
+                if args.gpu_mode:
+                    x_ = Variable(x_.cuda())
+                else:
+                    x_ = Variable(x_)
+
+                vl_elbo_list.append(model.loss(x_, 1.0).data[0])
+        elbo_vl = np.mean(vl_elbo_list)
+        train_hist['vl_loss'].append(elbo_vl * 784)
+
+
+        if ((iter + 1) % 100) == 0:
+                    print("Epoch: [%2d] [%4d/%4d] Beta %.2f, Elbo (train): %.8f, Elbo (valid): %.8f | lrD %.5f, lossD: %.8f" %
                             ((epoch + 1), \
                             (iter + 1), \
-                            len(data_loader.dataset) // args.batch_size, \
-                            beta, loss.data[0] *784, lrDisc, lossD.data[0]))
+                            len(data_loader_tr.dataset) // args.batch_size, \
+                            beta, loss.data[0] *784, \
+                            train_hist['vl_loss'][-1],\
+                            lrDisc, lossD.data[0]))
 
         train_hist['per_epoch_time'].append(time.time() - epoch_start_time)
         visualize_results(model, epoch+1, args)
@@ -255,14 +274,20 @@ def main():
 
 
     # load dataset
-    data_loader = DataLoader(datasets.MNIST('data/mnist', train=True, download=True,
+    data_loader_tr = DataLoader(datasets.MNIST('data/mnist', train=True, download=True,
+                                                        transform=transforms.Compose(
+                                                            [transforms.ToTensor()])),
+                                            batch_size=args.batch_size, shuffle=False)
+
+    data_loader_vl = DataLoader(datasets.MNIST('data/mnist', train=False, download=True,
                                                         transform=transforms.Compose(
                                                             [transforms.ToTensor()])),
                                             batch_size=args.batch_size, shuffle=False)
 
 
+
     # launch the graph in a session
-    train(model, args, data_loader)
+    train(model, args, data_loader_tr, data_loader_vl)
     print(" [*] Training finished!")
 
     # visualize learned generator
