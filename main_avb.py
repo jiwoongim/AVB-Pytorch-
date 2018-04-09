@@ -204,7 +204,7 @@ def parse_args():
     parser.add_argument('--arch_type', type=str, default='fc',
                         choices=['conv', 'fc'],
                         help='The Architecture Type')#, required=True)
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist'],
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'fmnist'],
                         help='The name of dataset')
     parser.add_argument('--epoch', type=int, default=1000, help='The number of epochs to run')
     parser.add_argument('--batch_size', type=int, default=100, help='The size of batch')
@@ -274,15 +274,26 @@ def main():
 
 
     # load dataset
-    data_loader_tr = DataLoader(datasets.MNIST('data/mnist', train=True, download=True,
-                                                        transform=transforms.Compose(
-                                                            [transforms.ToTensor()])),
-                                            batch_size=args.batch_size, shuffle=False)
+    if args.dataset == 'mnist':
+        data_loader_tr = DataLoader(datasets.MNIST('data/mnist', train=True, download=True,
+                                                            transform=transforms.Compose(
+                                                                [transforms.ToTensor()])),
+                                                batch_size=args.batch_size, shuffle=False)
 
-    data_loader_vl = DataLoader(datasets.MNIST('data/mnist', train=False, download=True,
-                                                        transform=transforms.Compose(
-                                                            [transforms.ToTensor()])),
-                                            batch_size=args.batch_size, shuffle=False)
+        data_loader_vl = DataLoader(datasets.MNIST('data/mnist', train=False, download=True,
+                                                            transform=transforms.Compose(
+                                                                [transforms.ToTensor()])),
+                                                batch_size=args.batch_size, shuffle=False)
+    elif args.dataset == 'fmnist':
+        data_loader_tr = DataLoader(datasets.FashionMNIST('data/fashion-mnist', train=True, download=True,
+                                                            transform=transforms.Compose(
+                                                                [transforms.ToTensor()])),
+                                                batch_size=args.batch_size, shuffle=False)
+
+        data_loader_vl = DataLoader(datasets.FashionMNIST('data/fashion-mnist', train=False, download=True,
+                                                            transform=transforms.Compose(
+                                                                [transforms.ToTensor()])),
+                                                batch_size=args.batch_size, shuffle=False)
 
 
 
