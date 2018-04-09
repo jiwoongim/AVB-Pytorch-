@@ -147,6 +147,12 @@ def train(model, args, data_loader_tr, data_loader_vl):
     utils.loss_plot(train_hist, os.path.join(args.save_dir, args.dataset, \
                                     args.model_type), args.model_type)
 
+    np.save('./results/AVB_'+args.dataset+'_'+args.arch_type+'_'+str(z_dim)+'Zdim_'+str(dim_sam)+'num_Zsamples_train_lle',  train_hist['tr_lle'])
+    np.save('./results/AVB_'+args.dataset+'_'+args.arch_type+'_'+str(z_dim)+'Zdim_'+str(dim_sam)+'num_Zsamples_train_elbo', train_hist['tr_elbo'])
+    np.save('./results/AVB_'+args.dataset+'_'+args.arch_type+'_'+str(z_dim)+'Zdim_'+str(dim_sam)+'num_Zsamples_valid_lle',  train_hist['vl_lle'])
+    np.save('./results/AVB_'+args.dataset+'_'+args.arch_type+'_'+str(z_dim)+'Zdim_'+str(dim_sam)+'num_Zsamples_valid_elbo', train_hist['vl_elbo'])
+
+
 
 def visualize_results(model, epoch, args, sample_num=100, fix=True):
 
