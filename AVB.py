@@ -367,4 +367,31 @@ class AVB():
         return -J / (iw * ih * C)
 
 
+    def lle(self, x):
+
+        N, C, iw, ih = x.size()
+        if self.acF:
+            z, mu, logvar = encoder(x_real)
+            mu, logvar = tf.stop_gradient(mean), tf.stop_gradient(logvar)
+            logstd = tf.sqrt(logvar + 1e-4)
+        else:
+            z   = self.encoder(x)
+
+        recon_x = self.decoder(z)
+
+        bce = x * torch.log(recon_x) + (1. - x) * torch.log(1 - recon_x)
+        bce = torch.sum(torch.sum(torch.sum(bce, dim=3), dim=2), dim=1)
+
+        Td = self.disc_net.logQZX_PZX(x, z)
+        #Td = log_mean_exp(Td.view([self.dim_sam, -1]).permute(1,0), dim=1)
+
+        #log_q_z_x = log_likelihood_samplesImean_sigma(Z, mu, logvar, dim=2)
+        #log_p_z   = prior_z(Z, dim=2)
+        #log_p_z_q_zx = torch.squeeze(Td) #+ logr - logz
+        log_ws = bce - Td 
+        log_ws = log_ws.view([self.dim_sam, -1]).permute(1,0)
+        J = torch.mean(torch.squeeze(log_mean_exp(log_ws, dim=1)), dim=0)
+
+        return -J/ (iw * iw * C)
+
 

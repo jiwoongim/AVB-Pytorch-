@@ -24,7 +24,8 @@ def train(model, args, data_loader_tr, data_loader_vl):
 
 
     train_hist = {}
-    train_hist['tr_loss'], train_hist['vl_loss'] = [], []
+    train_hist['tr_elbo'], train_hist['vl_elbo'] = [], []
+    train_hist['tr_lle'] , train_hist['vl_lle']  = [], []
     train_hist['per_epoch_time'] = []
     train_hist['total_time'] = []
 
@@ -49,6 +50,8 @@ def train(model, args, data_loader_tr, data_loader_vl):
                 else:
                     x_ = Variable(x_)
                     z_ = Variable(z_)
+                x_tile = x_.repeat(args.dim_sam,1,1,1,1).permute(1,0,2,3,4).contiguous()
+                x_tile = x_tile.view([N*args.dim_sam, C, IW, IH])
 
                 #if epoch < 150 or (epoch >= 150 and epoch %2 == 0):
                 #if np.random.randint(2, size=1)[0]:
@@ -75,8 +78,10 @@ def train(model, args, data_loader_tr, data_loader_vl):
                 beta = min([float(epoch) / args.anneal_steps, 1.0])
                 loss = model.loss(x_, beta) 
                 loss.backward()
-                train_hist['tr_loss'].append(loss.data[0])
 
+                lle = model.lle(x_) 
+                train_hist['tr_elbo'].append(loss.data[0])
+                train_hist['tr_lle'].append(lle.data[0])
 
                 if np.isnan(loss.data.cpu().numpy()):
                     print('loss AVB nan')
@@ -88,7 +93,7 @@ def train(model, args, data_loader_tr, data_loader_vl):
                 dec_optimizer.step()
 
 
-        vl_elbo_list = []
+        vl_lle_list, vl_elbo_list = [], []
         for iter, (x_, y_) in enumerate(data_loader_vl):
             if iter * args.batch_size <= 10000:
                 if iter == data_loader_vl.dataset.__len__() // args.batch_size:
@@ -98,20 +103,29 @@ def train(model, args, data_loader_tr, data_loader_vl):
                     x_ = Variable(x_.cuda())
                 else:
                     x_ = Variable(x_)
+                x_tile = x_.repeat(args.dim_sam,1,1,1,1).permute(1,0,2,3,4).contiguous()
+                x_tile = x_tile.view([N*args.dim_sam, C, IW, IH])
 
+                vl_lle_list.append(model.lle(x_tile).data[0])
                 vl_elbo_list.append(model.loss(x_, 1.0).data[0])
+
         elbo_vl = np.mean(vl_elbo_list)
-        train_hist['vl_loss'].append(elbo_vl * 784)
+        lle_vl  = np.mean(vl_lle_list)
+        train_hist['vl_lle'].append(lle_vl * 784)
+        train_hist['vl_elbo'].append(elbo_vl * 784)
 
 
         if ((iter + 1) % 100) == 0:
-                    print("Epoch: [%2d] [%4d/%4d] Beta %.2f, Elbo (train): %.8f, Elbo (valid): %.8f | lrD %.5f, lossD: %.8f" %
+                    print("Epoch: [%2d] [%4d/%4d] | lle (train): %.8f, lle (valid): %.8f | elbo (train): %.8f, elbo (valid): %.8f | lrD %.5f, lossD: %.8f" %
                             ((epoch + 1), \
                             (iter + 1), \
                             len(data_loader_tr.dataset) // args.batch_size, \
-                            beta, loss.data[0] *784, \
-                            train_hist['vl_loss'][-1],\
+                            lle.data[0] *784, \
+                            train_hist['vl_lle'][-1],\
+                            loss.data[0] *784, \
+                            train_hist['vl_elbo'][-1],\
                             lrDisc, lossD.data[0]))
+
 
         train_hist['per_epoch_time'].append(time.time() - epoch_start_time)
         visualize_results(model, epoch+1, args)
