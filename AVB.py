@@ -207,12 +207,12 @@ class Encoder(nn.Module):
             eps = Variable(eps, requires_grad=False) 
             x = x + self.enc_nlayer2(eps)
 
-            if self.gpu_mode :
-                eps = torch.randn(x.size()).cuda() 
-            else:
-                eps = torch.randn(x.size())
-            eps = Variable(eps, requires_grad=False) 
-            x = self.enc_layer3(x + self.enc_nlayer3(eps))
+            #if self.gpu_mode :
+            #    eps = torch.randn(x.size()).cuda() 
+            #else:
+            #    eps = torch.randn(x.size())
+            #eps = Variable(eps, requires_grad=False) 
+            x = self.enc_layer3(x)#+ self.enc_nlayer3(eps))
         h = self.fc(x)
 
         return h
