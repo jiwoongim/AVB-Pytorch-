@@ -79,6 +79,11 @@ def train(model, args, data_loader_tr, data_loader_vl):
                 loss = model.loss(x_, beta) 
                 loss.backward()
 
+                # `clip_grad_norm` helps prevent the exploding gradient problem.
+                torch.nn.utils.clip_grad_norm(model.encoder.parameters(), args.clip)
+                enc_optimizer.step()
+                dec_optimizer.step()
+
                 lle = model.lle(x_) 
                 train_hist['tr_elbo'].append(loss.data[0])
                 train_hist['tr_lle'].append(lle.data[0])
@@ -86,11 +91,6 @@ def train(model, args, data_loader_tr, data_loader_vl):
                 if np.isnan(loss.data.cpu().numpy()):
                     print('loss AVB nan')
                     import pdb; pdb.set_trace()
-
-                # `clip_grad_norm` helps prevent the exploding gradient problem.
-                torch.nn.utils.clip_grad_norm(model.encoder.parameters(), args.clip)
-                enc_optimizer.step()
-                dec_optimizer.step()
 
 
         vl_lle_list, vl_elbo_list = [], []
@@ -111,8 +111,8 @@ def train(model, args, data_loader_tr, data_loader_vl):
 
         elbo_vl = np.mean(vl_elbo_list)
         lle_vl  = np.mean(vl_lle_list)
-        train_hist['vl_lle'].append(lle_vl * 784)
-        train_hist['vl_elbo'].append(elbo_vl * 784)
+        train_hist['vl_lle'].append(lle_vl)
+        train_hist['vl_elbo'].append(elbo_vl)
 
 
         if ((iter + 1) % 100) == 0:
@@ -121,9 +121,9 @@ def train(model, args, data_loader_tr, data_loader_vl):
                             (iter + 1), \
                             len(data_loader_tr.dataset) // args.batch_size, \
                             lle.data[0] *784, \
-                            train_hist['vl_lle'][-1],\
+                            train_hist['vl_lle'][-1] * 784,\
                             loss.data[0] *784, \
-                            train_hist['vl_elbo'][-1],\
+                            train_hist['vl_elbo'][-1] * 784,\
                             lrDisc, lossD.data[0]))
 
 

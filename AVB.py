@@ -155,18 +155,19 @@ class Encoder(nn.Module):
                 nn.Linear(self.z_dim*4, self.z_dim*4),
                 nn.BatchNorm1d(self.z_dim*4),
                 nn.LeakyReLU(0.2))
+
             self.enc_nlayer2 = nn.Sequential(
                 nn.Linear(self.z_dim*4, self.z_dim*4),
             )
 
-            self.enc_layer3 = nn.Sequential( 
-                nn.Linear(self.z_dim*4, self.z_dim*4),
-                nn.BatchNorm1d(self.z_dim*4),
-                nn.LeakyReLU(0.2)
-            )
-            self.enc_nlayer3 = nn.Sequential(
-                nn.Linear(self.z_dim*4, self.z_dim*4),
-            )
+            #self.enc_layer3 = nn.Sequential( 
+            #    nn.Linear(self.z_dim*4, self.z_dim*4),
+            #    nn.BatchNorm1d(self.z_dim*4),
+            #    nn.LeakyReLU(0.2)
+            #)
+            #self.enc_nlayer3 = nn.Sequential(
+            #    nn.Linear(self.z_dim*4, self.z_dim*4),
+            #)
 
             self.fc = nn.Sequential(
                 nn.Linear(self.z_dim*4, self.z_dim),
@@ -200,6 +201,7 @@ class Encoder(nn.Module):
             eps = Variable(eps, requires_grad=False) 
             x = x + self.enc_nlayer1(eps)
 
+            x = self.enc_layer2(x)
             if self.gpu_mode :
                 eps = torch.randn(x.size()).cuda() 
             else:
@@ -212,7 +214,7 @@ class Encoder(nn.Module):
             #else:
             #    eps = torch.randn(x.size())
             #eps = Variable(eps, requires_grad=False) 
-            x = self.enc_layer3(x)#+ self.enc_nlayer3(eps))
+            #x = self.enc_layer3(x)#+ self.enc_nlayer3(eps))
         h = self.fc(x)
 
         return h
